@@ -1,103 +1,323 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { IoCalendarSharp } from "react-icons/io5";
+
+export default function Countdown() {
+  const [time, setTime] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [targetDate, setTargetDate] = useState(new Date("2025-09-29T15:59:59"));
+  const [dateInput, setDateInput] = useState("29/09/2025, 3:59 PM");
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const diff = targetDate.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTime({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTime({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  const colonVisible = Math.floor(Date.now() / 500) % 2 === 0;
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateInput(e.target.value);
+  };
+
+  const handleDateSubmit = () => {
+    // Parse the date from the input string (format: DD/MM/YYYY, HH:MM AM/PM)
+    const [datePart, timePart] = dateInput.split(", ");
+    const [day, month, year] = datePart.split("/").map(Number);
+    const [time, period] = timePart.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+    
+    if (period === "PM" && hours < 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    
+    const newDate = new Date(year, month - 1, day, hours, minutes);
+    if (!isNaN(newDate.getTime())) {
+      setTargetDate(newDate);
+      setShowDatePicker(false);
+    }
+  };
+
+  const formatDisplayDate = (date: Date) => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = date.getHours() % 12 || 12;
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = date.getHours() >= 12 ? "PM" : "AM";
+
+    return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      {/* Blur overlay when modal is open */}
+      {showDatePicker && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backdropFilter: "blur(5px)",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 10,
+          }}
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+      )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "2rem",
+          zIndex: 20,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "2rem",
+          }}
+        >
+          <main
+            style={{
+              fontFamily: '"Digital-7", monospace',
+              fontSize: "5rem",
+              color: "#00FF41",
+              lineHeight: "1",
+              display: "flex",
+              gap: "1rem",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <span>{time.days.toString().padStart(2, "0")}</span>
+              <span style={{ fontSize: "1rem" }}>DAYS</span>
+            </div>
+            <span
+              style={{
+                alignSelf: "center",
+                opacity: colonVisible ? 1 : 0.3,
+                marginBottom: "1.5rem",
+              }}
+            >
+              :
+            </span>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <span>{time.hours.toString().padStart(2, "0")}</span>
+              <span style={{ fontSize: "1rem" }}>HOURS</span>
+            </div>
+            <span
+              style={{
+                alignSelf: "center",
+                opacity: colonVisible ? 1 : 0.3,
+                marginBottom: "1.5rem",
+              }}
+            >
+              :
+            </span>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <span>{time.minutes.toString().padStart(2, "0")}</span>
+              <span style={{ fontSize: "1rem" }}>MINUTES</span>
+            </div>
+            <span
+              style={{
+                alignSelf: "center",
+                opacity: colonVisible ? 1 : 0.3,
+                marginBottom: "1.5rem",
+              }}
+            >
+              :
+            </span>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <span>{time.seconds.toString().padStart(2, "0")}</span>
+              <span style={{ fontSize: "1rem" }}>SECONDS</span>
+            </div>
+          </main>
+
+          <button
+            onClick={() => {
+              setDateInput(formatDisplayDate(targetDate));
+              setShowDatePicker(true);
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "#00FF41",
+              fontSize: "2rem",
+              marginLeft: "1rem",
+            }}
+            aria-label="Change target date"
           >
-            Read our docs
-          </a>
+            <IoCalendarSharp />
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Modal Popup */}
+        {showDatePicker && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(5px)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(0, 20, 0, 0.9)",
+                border: "2px solid #00FF41",
+                borderRadius: "8px",
+                padding: "2rem",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "1rem",
+                boxShadow: "0 0 20px #00FF41",
+                minWidth: "300px",
+                zIndex: 1001,
+              }}
+            >
+              <h3
+                style={{
+                  color: "#00FF41",
+                  fontSize: "1.5rem",
+                  marginBottom: "1rem",
+                  fontFamily: "monospace",
+                }}
+              >
+                Set Target Date
+              </h3>
+
+              <input
+                type="text"
+                value={dateInput}
+                onChange={handleDateChange}
+                placeholder="DD/MM/YYYY, HH:MM AM/PM"
+                style={{
+                  padding: "0.8rem",
+                  background: "rgba(0, 0, 0, 0.7)",
+                  color: "#00FF41",
+                  border: "1px solid #00FF41",
+                  borderRadius: "4px",
+                  fontFamily: "monospace",
+                  fontSize: "1rem",
+                  marginBottom: "1rem",
+                  width: "100%",
+                }}
+              />
+
+              <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
+                <button
+                  onClick={handleDateSubmit}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "#00FF41",
+                    border: "1px solid #00FF41",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    fontSize: "1rem",
+                    flex: 1,
+                  }}
+                >
+                  Set Date
+                </button>
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "#FF0000",
+                    border: "1px solid #FF0000",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontFamily: "monospace",
+                    fontSize: "1rem",
+                    flex: 1,
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
