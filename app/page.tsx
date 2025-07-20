@@ -11,8 +11,8 @@ export default function Countdown() {
     seconds: 0,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [targetDate, setTargetDate] = useState(new Date("2025-09-29T15:59:59"));
-  const [dateInput, setDateInput] = useState("29/09/2025, 3:59 PM");
+  const [targetDate, setTargetDate] = useState(new Date("2025-08-29T00:00:00"));
+  const [dateInput, setDateInput] = useState("29/08/2025, 12:00 AM");
 
   useEffect(() => {
     const updateCountdown = () => {
