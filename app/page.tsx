@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { IoCalendarSharp } from "react-icons/io5";
 
 export default function Countdown() {
+  const formatDisplayDate = (date: Date) => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = date.getHours() % 12 || 12;
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = date.getHours() >= 12 ? "PM" : "AM";
+
+    return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
+  };
+
   const [time, setTime] = useState({
     days: 0,
     hours: 0,
@@ -11,8 +22,9 @@ export default function Countdown() {
     seconds: 0,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [targetDate, setTargetDate] = useState(new Date("2025-08-29T00:00:00"));
-  const [dateInput, setDateInput] = useState("29/08/2025, 12:00 AM");
+  const [targetDate, setTargetDate] = useState(new Date());
+  const [dateInput, setDateInput] = useState(formatDisplayDate(new Date()));
+  const [colonVisible, setColonVisible] = useState(true);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -39,7 +51,12 @@ export default function Countdown() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
-  const colonVisible = Math.floor(Date.now() / 500) % 2 === 0;
+  useEffect(() => {
+    const blinkTimer = setInterval(() => {
+      setColonVisible((prev) => !prev);
+    }, 500);
+    return () => clearInterval(blinkTimer);
+  }, []);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDateInput(e.target.value);
@@ -51,10 +68,10 @@ export default function Countdown() {
     const [day, month, year] = datePart.split("/").map(Number);
     const [time, period] = timePart.split(" ");
     let [hours, minutes] = time.split(":").map(Number);
-    
+
     if (period === "PM" && hours < 12) hours += 12;
     if (period === "AM" && hours === 12) hours = 0;
-    
+
     const newDate = new Date(year, month - 1, day, hours, minutes);
     if (!isNaN(newDate.getTime())) {
       setTargetDate(newDate);
@@ -62,15 +79,9 @@ export default function Countdown() {
     }
   };
 
-  const formatDisplayDate = (date: Date) => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = date.getHours() % 12 || 12;
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const ampm = date.getHours() >= 12 ? "PM" : "AM";
-
-    return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
+  const handleDatePicker = () => {
+    setDateInput(formatDisplayDate(new Date()));
+    setShowDatePicker(true);
   };
 
   return (
@@ -201,10 +212,13 @@ export default function Countdown() {
           </main>
 
           <button
-            onClick={() => {
-              setDateInput(formatDisplayDate(targetDate));
-              setShowDatePicker(true);
-            }}
+            onClick={
+              handleDatePicker
+              // () => {
+              // setDateInput(formatDisplayDate(targetDate));
+              // setShowDatePicker(true);
+              // }
+            }
             style={{
               background: "transparent",
               border: "none",
